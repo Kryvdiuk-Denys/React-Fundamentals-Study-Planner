@@ -18,9 +18,6 @@ function TaskList({
     <section className="task-list" aria-label="Список навчальних завдань">
       {tasks.length === 0 ? (
         <div className="task-list__empty">
-          <span className="task-list__empty-icon" aria-hidden="true">
-            ✦
-          </span>
           <h2 className="task-list__empty-title">{emptyMessage}</h2>
           <p className="task-list__empty-description">
             Твій навчальний план оновлюватиметься тут.

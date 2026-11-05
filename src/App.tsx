@@ -5,12 +5,19 @@ import TaskForm from './components/TaskForm'
 import TaskList from './components/TaskList'
 import TaskStats from './components/TaskStats'
 import { initialTasks } from './data/initialTasks'
-import type { NewTask, Task, TaskFilter } from './types/task'
+import type {
+  NewTask,
+  Task,
+  TaskFilter,
+  TaskPriority,
+} from './types/task'
 
 function App() {
   const [tasks, setTasks] = useState<Task[]>(initialTasks)
   const [filter, setFilter] = useState<TaskFilter>('all')
   const [searchTerm, setSearchTerm] = useState('')
+  const [sortByPriority, setSortByPriority] = useState(false)
+  const [isDarkTheme, setIsDarkTheme] = useState(false)
 
   const completedCount = tasks.filter((task) => task.completed).length
   const pendingCount = tasks.length - completedCount
@@ -18,7 +25,7 @@ function App() {
   const filteredTasks = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLocaleLowerCase('uk')
 
-    return tasks.filter((task) => {
+    const visibleTasks = tasks.filter((task) => {
       const matchesFilter =
         filter === 'all' ||
         (filter === 'completed' && task.completed) ||
@@ -31,7 +38,20 @@ function App() {
 
       return matchesFilter && matchesSearch
     })
-  }, [filter, searchTerm, tasks])
+
+    if (!sortByPriority) return visibleTasks
+
+    const priorityOrder: Record<TaskPriority, number> = {
+      high: 0,
+      medium: 1,
+      low: 2,
+    }
+
+    return [...visibleTasks].sort(
+      (first, second) =>
+        priorityOrder[first.priority] - priorityOrder[second.priority],
+    )
+  }, [filter, searchTerm, sortByPriority, tasks])
 
   const addTask = (newTask: NewTask) => {
     setTasks((currentTasks) => [
@@ -56,6 +76,12 @@ function App() {
     )
   }
 
+  const clearCompletedTasks = () => {
+    setTasks((currentTasks) =>
+      currentTasks.filter((task) => !task.completed),
+    )
+  }
+
   const emptyMessage =
     tasks.length === 0
       ? 'Завдань поки немає. Додайте перше навчальне завдання.'
@@ -64,9 +90,12 @@ function App() {
         : 'За цим фільтром завдань немає.'
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell${isDarkTheme ? ' app-shell--dark' : ''}`}>
       <div className="app">
-        <Header />
+        <Header
+          isDarkTheme={isDarkTheme}
+          onThemeToggle={() => setIsDarkTheme((currentTheme) => !currentTheme)}
+        />
 
         <TaskStats
           total={tasks.length}
@@ -87,9 +116,13 @@ function App() {
                 completed: completedCount,
                 pending: pendingCount,
               }}
+              completedCount={completedCount}
               searchTerm={searchTerm}
+              sortByPriority={sortByPriority}
               onFilterChange={setFilter}
               onSearchChange={setSearchTerm}
+              onSortChange={setSortByPriority}
+              onClearCompleted={clearCompletedTasks}
             />
             <TaskList
               tasks={filteredTasks}
