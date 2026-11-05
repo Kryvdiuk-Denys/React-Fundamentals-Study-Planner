@@ -1,0 +1,110 @@
+import { useState, type FormEvent } from 'react'
+import type { NewTask, TaskPriority } from '../types/task'
+
+interface TaskFormProps {
+  onAddTask: (task: NewTask) => void
+}
+
+function TaskForm({ onAddTask }: TaskFormProps) {
+  const [title, setTitle] = useState('')
+  const [description, setDescription] = useState('')
+  const [category, setCategory] = useState('')
+  const [priority, setPriority] = useState<TaskPriority>('medium')
+  const [error, setError] = useState('')
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    const trimmedTitle = title.trim()
+
+    if (!trimmedTitle) {
+      setError('Введіть назву завдання.')
+      return
+    }
+
+    onAddTask({
+      title: trimmedTitle,
+      description: description.trim(),
+      category: category.trim() || 'Навчання',
+      priority,
+    })
+    setTitle('')
+    setDescription('')
+    setCategory('')
+    setPriority('medium')
+    setError('')
+  }
+
+  return (
+    <form className="task-form" onSubmit={handleSubmit}>
+      <h2 className="task-form__heading">Нове завдання</h2>
+      <p className="task-form__hint">
+        Додай наступний крок до свого навчального плану.
+      </p>
+
+      <label className="task-form__field">
+        <span className="task-form__label">
+          Назва <span className="task-form__required">*</span>
+        </span>
+        <input
+          className="task-form__input"
+          type="text"
+          value={title}
+          onChange={(event) => {
+            setTitle(event.target.value)
+            if (error) setError('')
+          }}
+          placeholder="Наприклад, вивчити useState"
+          aria-invalid={Boolean(error)}
+          aria-describedby={error ? 'task-title-error' : undefined}
+          required
+        />
+        {error && (
+          <span className="task-form__error" id="task-title-error" role="alert">
+            {error}
+          </span>
+        )}
+      </label>
+
+      <label className="task-form__field">
+        <span className="task-form__label">Опис</span>
+        <textarea
+          className="task-form__textarea"
+          value={description}
+          onChange={(event) => setDescription(event.target.value)}
+          placeholder="Коротко опиши, що потрібно зробити"
+          rows={3}
+        />
+      </label>
+
+      <label className="task-form__field">
+        <span className="task-form__label">Категорія</span>
+        <input
+          className="task-form__input"
+          type="text"
+          value={category}
+          onChange={(event) => setCategory(event.target.value)}
+          placeholder="Наприклад, React"
+        />
+      </label>
+
+      <label className="task-form__field">
+        <span className="task-form__label">Пріоритет</span>
+        <select
+          className="task-form__select"
+          value={priority}
+          onChange={(event) => setPriority(event.target.value as TaskPriority)}
+        >
+          <option value="low">Низький</option>
+          <option value="medium">Середній</option>
+          <option value="high">Високий</option>
+        </select>
+      </label>
+
+      <button className="task-form__submit" type="submit">
+        + Додати завдання
+      </button>
+    </form>
+  )
+}
+
+export default TaskForm
