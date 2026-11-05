@@ -1,4 +1,4 @@
-import type { Task } from '../types/task'
+import { CATEGORY_COLOR_VALUES, type Task } from '../types/task'
 
 interface TaskItemProps {
   task: Task
@@ -35,7 +35,16 @@ function TaskItem({ task, onToggle, onDelete }: TaskItemProps) {
           <p className="task-item__description">{task.description}</p>
         )}
         <div className="task-item__meta">
-          <span className="task-item__badge">{task.category}</span>
+          <span className="task-item__category">
+            <span
+              className="task-item__category-dot"
+              style={{
+                backgroundColor: CATEGORY_COLOR_VALUES[task.categoryColor],
+              }}
+              aria-hidden="true"
+            />
+            {task.category}
+          </span>
           <span
             className={`task-item__badge task-item__priority--${task.priority}`}
           >

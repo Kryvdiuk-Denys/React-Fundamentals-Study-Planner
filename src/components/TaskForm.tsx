@@ -1,5 +1,10 @@
 import { useState, type FormEvent } from 'react'
-import type { NewTask, TaskPriority } from '../types/task'
+import {
+  CATEGORY_COLORS,
+  type CategoryColor,
+  type NewTask,
+  type TaskPriority,
+} from '../types/task'
 
 interface TaskFormProps {
   onAddTask: (task: NewTask) => void
@@ -9,6 +14,7 @@ function TaskForm({ onAddTask }: TaskFormProps) {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [category, setCategory] = useState('')
+  const [categoryColor, setCategoryColor] = useState<CategoryColor>('blue')
   const [priority, setPriority] = useState<TaskPriority>('medium')
   const [error, setError] = useState('')
 
@@ -25,11 +31,13 @@ function TaskForm({ onAddTask }: TaskFormProps) {
       title: trimmedTitle,
       description: description.trim(),
       category: category.trim() || 'Навчання',
+      categoryColor,
       priority,
     })
     setTitle('')
     setDescription('')
     setCategory('')
+    setCategoryColor('blue')
     setPriority('medium')
     setError('')
   }
@@ -53,7 +61,7 @@ function TaskForm({ onAddTask }: TaskFormProps) {
             setTitle(event.target.value)
             if (error) setError('')
           }}
-          placeholder="Наприклад, вивчити useState"
+          placeholder="Наприклад, купити продукти"
           aria-invalid={Boolean(error)}
           aria-describedby={error ? 'task-title-error' : undefined}
           required
@@ -83,8 +91,25 @@ function TaskForm({ onAddTask }: TaskFormProps) {
           type="text"
           value={category}
           onChange={(event) => setCategory(event.target.value)}
-          placeholder="Наприклад, React"
+          placeholder="Наприклад, Покупки"
         />
+      </label>
+
+      <label className="task-form__field">
+        <span className="task-form__label">Колір категорії</span>
+        <select
+          className="task-form__select"
+          value={categoryColor}
+          onChange={(event) =>
+            setCategoryColor(event.target.value as CategoryColor)
+          }
+        >
+          {CATEGORY_COLORS.map((color) => (
+            <option key={color.id} value={color.id}>
+              {color.label}
+            </option>
+          ))}
+        </select>
       </label>
 
       <label className="task-form__field">

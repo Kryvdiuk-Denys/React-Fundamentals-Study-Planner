@@ -1,14 +1,26 @@
-function Header() {
+interface HeaderProps {
+  isDarkTheme: boolean
+  onThemeToggle: () => void
+}
+
+function Header({ isDarkTheme, onThemeToggle }: HeaderProps) {
   return (
     <header className="app-header">
       <div>
-        <p className="app-header__eyebrow">Навчайся у власному ритмі</p>
         <h1 className="app-header__title">Study Planner</h1>
         <p className="app-header__description">
-          Усі навчальні цілі — в одному зручному місці.
+          Плануй справи, відмічай зроблене.
         </p>
       </div>
-      <span className="app-header__badge">Мій навчальний план</span>
+      <button
+        className="app-header__theme-toggle"
+        type="button"
+        aria-label={isDarkTheme ? 'Увімкнути світлу тему' : 'Увімкнути темну тему'}
+        aria-pressed={isDarkTheme}
+        onClick={onThemeToggle}
+      >
+        {isDarkTheme ? 'Світла тема' : 'Темна тема'}
+      </button>
     </header>
   )
 }
