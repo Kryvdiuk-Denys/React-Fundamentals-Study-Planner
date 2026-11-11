@@ -1,0 +1,126 @@
+.task-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 2px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.task-item:last-child {
+border-bottom: 0;
+}
+
+.task-item__check {
+width: 22px;
+height: 22px;
+flex: 0 0 auto;
+margin-top: 1px;
+padding: 0;
+border: 1px solid #9aa5b5;
+border-radius: 4px;
+background: var(--color-control);
+color: #fff;
+}
+
+.task-item__check--completed {
+border-color: var(--color-primary);
+background: var(--color-primary);
+}
+
+.task-item__body {
+min-width: 0;
+flex: 1;
+}
+
+.task-item__title {
+margin: 0;
+font-size: 1rem;
+}
+
+.task-item__description {
+margin: 6px 0 0;
+color: var(--color-muted);
+font-size: 0.9rem;
+}
+
+.task-item__meta {
+display: flex;
+flex-wrap: wrap;
+gap: 6px 12px;
+margin-top: 8px;
+color: var(--color-muted);
+font-size: 0.82rem;
+}
+
+.task-item__badge {
+color: var(--color-text);
+}
+
+.task-item__category {
+display: inline-flex;
+align-items: center;
+gap: 6px;
+color: var(--color-text);
+}
+
+.task-item__category-dot {
+width: 9px;
+height: 9px;
+border-radius: 50%;
+}
+
+.task-item__priority--low,
+.task-item__priority--medium,
+.task-item__priority--high {
+font-weight: 600;
+}
+
+.task-item--completed .task-item__title {
+color: var(--color-muted);
+text-decoration: line-through;
+}
+
+.task-item__actions {
+display: flex;
+align-items: center;
+gap: 8px;
+}
+
+.task-item__edit,
+.task-item__undo,
+.task-item__delete {
+padding: 4px 8px;
+border: 1px solid var(--color-border);
+border-radius: 5px;
+background: var(--color-control-muted);
+color: var(--color-text);
+}
+
+.task-item__undo {
+background: #f2dd8a;
+color: #3b2d00;
+}
+
+.task-item__delete:hover,
+.task-item__edit:hover,
+.task-item__undo:hover {
+border-color: var(--color-primary);
+}
+
+.task-item__pending-label {
+display: inline-block;
+margin-left: 8px;
+padding: 3px 6px;
+border-radius: 999px;
+background: #fff1c4;
+color: #7b5600;
+font-size: 0.68rem;
+font-weight: 700;
+letter-spacing: 0.04em;
+text-transform: uppercase;
+}
+
+.task-item--pending-delete {
+opacity: 0.72;
+filter: grayscale(0.15);
+}

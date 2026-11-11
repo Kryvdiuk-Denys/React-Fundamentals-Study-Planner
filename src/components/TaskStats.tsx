@@ -1,3 +1,5 @@
+import './TaskStats.scss'
+
 interface TaskStatsProps {
   total: number
   completed: number

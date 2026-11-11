@@ -1,13 +1,14 @@
 ﻿import type { NewTask, Task } from '../types/task'
 
 export type TaskAction =
-  | { type: 'add'; payload: NewTask }
+  | { type: 'add'; payload: { task: NewTask; id: string } }
   | { type: 'toggle'; payload: { taskId: string } }
-  | { type: 'update'; payload: { taskId: string; updates: Partial<Task> } }
+  | { type: 'update'; payload: { taskId: string; updates: Partial<NewTask> } }
   | { type: 'requestDelete'; payload: { taskId: string } }
   | { type: 'confirmDelete'; payload: { taskId: string } }
   | { type: 'undoDelete'; payload: { taskId: string } }
   | { type: 'clearCompleted' }
+  | { type: 'restoreTasks'; payload: Task[] }
   | { type: 'reset'; payload: Task[] }
 
 export function taskReducer(tasks: Task[], action: TaskAction): Task[] {
@@ -15,8 +16,8 @@ export function taskReducer(tasks: Task[], action: TaskAction): Task[] {
     case 'add': {
       return [
         {
-          ...action.payload,
-          id: crypto.randomUUID(),
+          ...action.payload.task,
+          id: action.payload.id,
           completed: false,
           pendingDelete: false,
         },
@@ -62,6 +63,11 @@ export function taskReducer(tasks: Task[], action: TaskAction): Task[] {
 
     case 'clearCompleted': {
       return tasks.filter((task) => !task.completed)
+    }
+
+    case 'restoreTasks': {
+      const restoredIds = new Set(action.payload.map((task) => task.id))
+      return [...action.payload, ...tasks.filter((task) => !restoredIds.has(task.id))]
     }
 
     case 'reset': {

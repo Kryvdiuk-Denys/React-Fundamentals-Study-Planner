@@ -1,37 +1,11 @@
-﻿import { useContext } from 'react'
-import { createContext, useCallback, useEffect, useMemo, useReducer, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useReducer, useState, type ReactNode } from 'react'
 import { initialTasks } from '../data/initialTasks'
-import type { NewTask, Task, TaskFilter } from '../types/task'
+import { CATEGORY_COLORS, type NewTask, type Task, type TaskFilter } from '../types/task'
 import { taskReducer } from '../reducers/taskReducer'
+import TaskContext, { type ToastState, type ToastVariant } from './TaskContext'
+import useLocalStorage from '../hooks/useLocalStorage'
 
 const STORAGE_KEY = 'study-planner.tasks'
-export type ToastVariant = 'success' | 'info' | 'error'
-
-export interface ToastState {
-  id: number
-  message: string
-  variant: ToastVariant
-  durationMs: number
-  actionLabel?: string
-  onAction?: () => void
-}
-
-interface TaskContextValue {
-  tasks: Task[]
-  filter: TaskFilter
-  setFilter: (filter: TaskFilter) => void
-  addTask: (task: NewTask) => void
-  updateTask: (taskId: string, updates: Partial<Task>) => void
-  toggleTask: (taskId: string) => void
-  requestDelete: (taskId: string) => void
-  undoDelete: (taskId: string) => void
-  clearCompleted: () => void
-  resetTasks: () => void
-  toast: ToastState | null
-  dismissToast: () => void
-}
-
-const TaskContext = createContext<TaskContextValue | undefined>(undefined)
 
 function readStoredTasks(): Task[] {
   if (typeof window === 'undefined') {
@@ -44,49 +18,62 @@ function readStoredTasks(): Task[] {
       return initialTasks
     }
 
-    const parsedTasks = JSON.parse(storedTasks)
-    if (!Array.isArray(parsedTasks)) {
+    const parsedTasks: unknown = JSON.parse(storedTasks)
+    if (!Array.isArray(parsedTasks) || !parsedTasks.every(isStoredTask)) {
       return initialTasks
     }
 
-    return parsedTasks.map((task) => ({ ...task, pendingDelete: Boolean(task.pendingDelete) })) as Task[]
+    return parsedTasks.map((task) => ({ ...task, pendingDelete: false }))
   } catch {
     return initialTasks
   }
 }
 
-function readStoredFilter(): TaskFilter {
-  if (typeof window === 'undefined') {
-    return 'all'
+function isStoredTask(value: unknown): value is Task {
+  if (typeof value !== 'object' || value === null) {
+    return false
   }
 
-  try {
-    const rawValue = window.localStorage.getItem('study-planner.filter')
-    if (rawValue === null) {
-      return 'all'
-    }
-
-    const parsedValue = JSON.parse(rawValue)
-    return parsedValue === 'all' || parsedValue === 'completed' || parsedValue === 'pending'
-      ? parsedValue
-      : 'all'
-  } catch {
-    return 'all'
-  }
+  const task = value as Record<string, unknown>
+  return (
+    typeof task.id === 'string' &&
+    typeof task.title === 'string' &&
+    typeof task.description === 'string' &&
+    typeof task.completed === 'boolean' &&
+    (task.priority === 'low' ||
+      task.priority === 'medium' ||
+      task.priority === 'high') &&
+    typeof task.category === 'string' &&
+    CATEGORY_COLORS.some((color) => color.id === task.categoryColor)
+  )
 }
 
 export function TaskProvider({ children }: { children: ReactNode }) {
   const [tasks, dispatch] = useReducer(taskReducer, undefined, readStoredTasks)
-  const [filter, setFilter] = useState<TaskFilter>(() => readStoredFilter())
+  const [filter, setFilter] = useLocalStorage<TaskFilter>(
+    'study-planner.filter',
+    'all',
+  )
   const [toast, setToast] = useState<ToastState | null>(null)
 
   useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks))
+    const savedTasks = tasks.map(
+      ({ id, title, description, completed, priority, category, categoryColor }) => ({
+        id,
+        title,
+        description,
+        completed,
+        priority,
+        category,
+        categoryColor,
+      }),
+    )
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(savedTasks))
+    } catch (error) {
+      console.error('Unable to save study planner tasks to localStorage.', error)
+    }
   }, [tasks])
-
-  useEffect(() => {
-    window.localStorage.setItem('study-planner.filter', JSON.stringify(filter))
-  }, [filter])
 
   useEffect(() => {
     const activeTasks = tasks.filter((task) => !task.completed).length
@@ -131,14 +118,17 @@ export function TaskProvider({ children }: { children: ReactNode }) {
 
   const addTask = useCallback(
     (newTask: NewTask) => {
-      dispatch({ type: 'add', payload: newTask })
+      dispatch({
+        type: 'add',
+        payload: { task: newTask, id: crypto.randomUUID() },
+      })
       showToast('Завдання успішно створено.', 'success', { durationMs: 3500 })
     },
     [showToast],
   )
 
   const updateTask = useCallback(
-    (taskId: string, updates: Partial<Task>) => {
+    (taskId: string, updates: Partial<NewTask>) => {
       dispatch({ type: 'update', payload: { taskId, updates } })
       showToast('Завдання успішно оновлено.', 'success', { durationMs: 3500 })
     },
@@ -151,18 +141,32 @@ export function TaskProvider({ children }: { children: ReactNode }) {
 
   const requestDelete = useCallback(
     (taskId: string) => {
+      const activePendingDelete = tasks.find((task) => task.pendingDelete)
+      if (activePendingDelete) {
+        showToast(
+          'Спочатку скасуйте або дочекайтеся поточного видалення.',
+          'error',
+          { durationMs: 3500 },
+        )
+        return
+      }
+
+      if (!tasks.some((task) => task.id === taskId)) {
+        showToast('Не вдалося знайти це завдання.', 'error')
+        return
+      }
+
       dispatch({ type: 'requestDelete', payload: { taskId } })
       showToast('Завдання буде видалено через 5 секунд.', 'info', {
         durationMs: 5000,
         actionLabel: 'Скасувати',
         onAction: () => {
           dispatch({ type: 'undoDelete', payload: { taskId } })
-          setToast(null)
           showToast('Видалення скасовано.', 'success', { durationMs: 2500 })
         },
       })
     },
-    [showToast],
+    [showToast, tasks],
   )
 
   const pendingDeleteTask = useMemo(
@@ -195,16 +199,32 @@ export function TaskProvider({ children }: { children: ReactNode }) {
   )
 
   const clearCompleted = useCallback(() => {
+    const completedTasks = tasks
+      .filter((task) => task.completed)
+      .map((task) => ({ ...task, pendingDelete: false }))
+
+    if (completedTasks.length === 0) {
+      showToast('Немає виконаних завдань для очищення.', 'error')
+      return
+    }
+
     dispatch({ type: 'clearCompleted' })
-    showToast('Виконані завдання очищено.', 'success', { durationMs: 3000 })
-  }, [showToast])
+    showToast('Виконані завдання очищено.', 'info', {
+      durationMs: 5000,
+      actionLabel: 'Скасувати',
+      onAction: () => {
+        dispatch({ type: 'restoreTasks', payload: completedTasks })
+        showToast('Очищення скасовано.', 'success', { durationMs: 2500 })
+      },
+    })
+  }, [showToast, tasks])
 
   const resetTasks = useCallback(() => {
     dispatch({ type: 'reset', payload: initialTasks })
     showToast('Дані скинуто до початкових.', 'info', { durationMs: 3000 })
   }, [showToast])
 
-  const value = useMemo<TaskContextValue>(
+  const value = useMemo(
     () => ({
       tasks,
       filter,
@@ -219,20 +239,8 @@ export function TaskProvider({ children }: { children: ReactNode }) {
       toast,
       dismissToast,
     }),
-    [addTask, clearCompleted, dismissToast, filter, requestDelete, resetTasks, tasks, toast, toggleTask, undoDelete, updateTask],
+    [addTask, clearCompleted, dismissToast, filter, requestDelete, resetTasks, setFilter, tasks, toast, toggleTask, undoDelete, updateTask],
   )
 
   return <TaskContext.Provider value={value}>{children}</TaskContext.Provider>
 }
-
-export function useTaskContext() {
-  const context = useContext(TaskContext)
-
-  if (!context) {
-    throw new Error('useTaskContext must be used inside a TaskProvider')
-  }
-
-  return context
-}
-
-export default TaskContext
