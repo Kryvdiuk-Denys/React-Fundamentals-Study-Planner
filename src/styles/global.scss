@@ -1,0 +1,45 @@
+:root {
+  font-family: Arial, Helvetica, sans-serif;
+  color: #252b35;
+  background: #e9eef8;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+
+  --color-text: #252b35;
+  --color-muted: #687386;
+  --color-border: #d7deea;
+  --color-primary: #4267a8;
+  --color-primary-dark: #345487;
+  --color-surface: #fff;
+  --color-control: #fff;
+  --color-control-muted: #f3f5f8;
+}
+
+* {
+box-sizing: border-box;
+}
+
+body {
+min-width: 320px;
+min-height: 100vh;
+margin: 0;
+}
+
+button,
+input,
+select,
+textarea {
+font: inherit;
+}
+
+button {
+cursor: pointer;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+outline: 2px solid var(--color-primary);
+outline-offset: 2px;
+}

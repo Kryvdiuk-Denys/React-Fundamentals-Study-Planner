@@ -1,22 +1,17 @@
 import type { Task } from '../types/task'
 import TaskItem from './TaskItem'
+import './TaskList.scss'
 
 interface TaskListProps {
   tasks: Task[]
   emptyMessage: string
-  onToggleTask: (taskId: string) => void
-  onDeleteTask: (taskId: string) => void
   onEditTask: (taskId: string) => void
-  onUndoTask: (taskId: string) => void
 }
 
 function TaskList({
   tasks,
   emptyMessage,
-  onToggleTask,
-  onDeleteTask,
   onEditTask,
-  onUndoTask,
 }: TaskListProps) {
   return (
     <section className="task-list" aria-label="Список навчальних завдань">
@@ -32,10 +27,7 @@ function TaskList({
           <TaskItem
             key={task.id}
             task={task}
-            onToggle={onToggleTask}
-            onDelete={onDeleteTask}
             onEdit={onEditTask}
-            onUndo={onUndoTask}
           />
         ))
       )}

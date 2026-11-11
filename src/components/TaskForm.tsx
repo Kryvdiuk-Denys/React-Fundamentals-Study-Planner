@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import {
   CATEGORY_COLORS,
   type CategoryColor,
@@ -6,6 +6,7 @@ import {
   type Task,
   type TaskPriority,
 } from '../types/task'
+import './TaskForm.scss'
 
 interface TaskFormProps {
   initialTask?: Task
@@ -24,23 +25,6 @@ function TaskForm({ initialTask, onSubmit, onCancel }: TaskFormProps) {
     initialTask?.priority ?? 'medium',
   )
   const [error, setError] = useState('')
-
-  useEffect(() => {
-    if (!initialTask) {
-      setTitle('')
-      setDescription('')
-      setCategory('')
-      setCategoryColor('blue')
-      setPriority('medium')
-      return
-    }
-
-    setTitle(initialTask.title)
-    setDescription(initialTask.description)
-    setCategory(initialTask.category)
-    setCategoryColor(initialTask.categoryColor)
-    setPriority(initialTask.priority)
-  }, [initialTask])
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()

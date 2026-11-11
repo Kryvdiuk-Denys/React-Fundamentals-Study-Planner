@@ -8,6 +8,7 @@ import Toast from './components/Toast'
 import useLocalStorage from './hooks/useLocalStorage'
 import useTaskContext from './hooks/useTaskContext'
 import type { TaskPriority } from './types/task'
+import './styles/app.scss'
 
 function App() {
   const {
@@ -16,9 +17,6 @@ function App() {
     setFilter,
     addTask,
     updateTask,
-    toggleTask,
-    requestDelete,
-    undoDelete,
     clearCompleted,
     resetTasks,
     toast,
@@ -109,6 +107,7 @@ function App() {
         <div className="app__workspace">
           <aside className="app__sidebar" aria-label="Створення завдання">
             <TaskForm
+              key={editingTask?.id ?? 'new'}
               initialTask={editingTask ?? undefined}
               onSubmit={handleSubmitTask}
               onCancel={() => setEditingTaskId(null)}
@@ -129,18 +128,13 @@ function App() {
               onFilterChange={setFilter}
               onSearchChange={setSearchTerm}
               onSortChange={setSortByPriority}
-              onClearCompleted={() => clearCompleted()}
+              onClearCompleted={clearCompleted}
               onResetTasks={resetTasks}
             />
             <TaskList
               tasks={filteredTasks}
               emptyMessage={emptyMessage}
-              onToggleTask={toggleTask}
-              onDeleteTask={(taskId) => {
-                requestDelete(taskId)
-              }}
               onEditTask={setEditingTaskId}
-              onUndoTask={undoDelete}
             />
           </main>
         </div>

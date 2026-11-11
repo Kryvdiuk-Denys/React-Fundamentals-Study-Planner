@@ -1,4 +1,6 @@
-﻿interface ToastProps {
+import './Toast.scss'
+
+interface ToastProps {
   toast: {
     id: number
     message: string
@@ -20,11 +22,21 @@ function Toast({ toast, onDismiss }: ToastProps) {
       <div className="toast__content">
         <span className="toast__message">{toast.message}</span>
         {toast.actionLabel && toast.onAction && (
-          <button type="button" className="toast__action" onClick={() => { toast.onAction?.(); onDismiss(); }}>
+          <button
+            type="button"
+            className="toast__action"
+            onClick={toast.onAction}
+          >
             {toast.actionLabel}
           </button>
         )}
       </div>
+      <span
+        key={toast.id}
+        className="toast__progress"
+        style={{ animationDuration: `${toast.durationMs}ms` }}
+        aria-hidden="true"
+      />
       <button type="button" className="toast__close" aria-label="Закрити повідомлення" onClick={onDismiss}>
         ×
       </button>

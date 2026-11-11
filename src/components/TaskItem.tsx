@@ -1,11 +1,10 @@
 import { CATEGORY_COLOR_VALUES, type Task } from '../types/task'
+import useTaskContext from '../hooks/useTaskContext'
+import './TaskItem.scss'
 
 interface TaskItemProps {
   task: Task
-  onToggle: (taskId: string) => void
-  onDelete: (taskId: string) => void
   onEdit: (taskId: string) => void
-  onUndo: (taskId: string) => void
 }
 
 const priorityLabels = {
@@ -14,7 +13,9 @@ const priorityLabels = {
   high: 'Високий пріоритет',
 } as const
 
-function TaskItem({ task, onToggle, onDelete, onEdit, onUndo }: TaskItemProps) {
+function TaskItem({ task, onEdit }: TaskItemProps) {
+  const { toggleTask, requestDelete, undoDelete } = useTaskContext()
+
   return (
     <article
       className={`task-item${task.completed ? ' task-item--completed' : ''}${task.pendingDelete ? ' task-item--pending-delete' : ''}`}
@@ -26,7 +27,8 @@ function TaskItem({ task, onToggle, onDelete, onEdit, onUndo }: TaskItemProps) {
           task.completed ? `Повернути «${task.title}» у роботу` : `Позначити «${task.title}» виконаним`
         }
         aria-pressed={task.completed}
-        onClick={() => onToggle(task.id)}
+        disabled={task.pendingDelete}
+        onClick={() => toggleTask(task.id)}
       >
         {task.completed ? '+' : ''}
       </button>
@@ -68,7 +70,7 @@ function TaskItem({ task, onToggle, onDelete, onEdit, onUndo }: TaskItemProps) {
           <button
             className="task-item__undo"
             type="button"
-            onClick={() => onUndo(task.id)}
+            onClick={() => undoDelete(task.id)}
           >
             Undo
           </button>
@@ -85,7 +87,8 @@ function TaskItem({ task, onToggle, onDelete, onEdit, onUndo }: TaskItemProps) {
           className="task-item__delete"
           type="button"
           aria-label={`Видалити «${task.title}»`}
-          onClick={() => onDelete(task.id)}
+          disabled={task.pendingDelete}
+          onClick={() => requestDelete(task.id)}
         >
           ×
         </button>

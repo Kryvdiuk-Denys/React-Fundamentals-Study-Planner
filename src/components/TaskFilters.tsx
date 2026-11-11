@@ -1,4 +1,5 @@
 import type { TaskFilter } from '../types/task'
+import './TaskFilters.scss'
 
 interface TaskFiltersProps {
   activeFilter: TaskFilter

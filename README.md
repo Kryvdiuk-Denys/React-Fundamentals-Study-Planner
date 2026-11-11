@@ -1,19 +1,22 @@
 # Study Planner
 
-Навчальний планувальник завдань для лабораторної роботи №8 з React Fundamentals.
-Застосунок створено на React 19, TypeScript і Vite. Дані зберігаються у стані React
-та скидаються після перезавантаження сторінки.
+Навчальний планувальник завдань для лабораторної роботи №9 з React Fundamentals.
+Застосунок створено на React 19, TypeScript, Vite і SCSS. Список задач керується
+через `useReducer` та `TaskContext`, а зміни зберігаються у `localStorage`.
 
 ## Можливості
 
 - додавання завдань із назвою, описом, категорією та пріоритетом;
-- перемикання статусу виконання та видалення завдань;
+- перемикання статусу виконання та видалення із 5-секундним Undo;
+- редагування завдань;
 - фільтри «Усі», «Виконані» та «Не виконані» з лічильниками;
 - пошук за назвою, описом і категорією;
 - сортування завдань за пріоритетом;
 - очищення виконаних завдань;
 - вибір кольору для категорії та перемикач теми;
 - статистика загальної кількості, виконаних і невиконаних завдань;
+- синхронізація заголовка вкладки з кількістю активних задач;
+- автоматичне збереження задач і налаштувань у `localStorage`;
 - адаптивний інтерфейс на SCSS із BEM-класами.
 
 ## Запуск
@@ -36,10 +39,14 @@ npm run build
 
 ```text
 src/
-├── components/
+├── components/  # UI components with colocated SCSS
+├── context/     # Shared task state and provider
+├── hooks/       # Context and localStorage hooks
+├── reducers/    # Pure task reducer
 ├── data/
-├── types/
+├── styles/      # Global and application layout styles
 ├── App.tsx
-├── index.scss
 └── main.tsx
 ```
+
+Pending deletion is session-only and is not restored after reloading the page.

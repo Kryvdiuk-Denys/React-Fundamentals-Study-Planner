@@ -1,0 +1,111 @@
+.app-shell--dark {
+  --color-text: #ededed;
+  --color-muted: #b2b2b2;
+  --color-border: #414141;
+  --color-primary: #b7b7b7;
+  --color-primary-dark: #d0d0d0;
+  --color-surface: #292929;
+  --color-control: #202020;
+  --color-control-muted: #353535;
+}
+
+.app-shell {
+min-height: 100vh;
+padding: 40px 20px;
+color: var(--color-text);
+background-image: linear-gradient(
+to right top,
+#a9e3e8,
+#b9e6e9,
+#c9e8e9,
+#d8ebea,
+#e6edeb
+);
+}
+
+.app-shell--dark {
+background-image: linear-gradient(
+to right top,
+#232323,
+#282828,
+#2e2e2e,
+#333333,
+#393939,
+#383839,
+#383838,
+#373738,
+#302f31,
+#2a282a,
+#252021,
+#1f1919
+);
+}
+
+.app {
+width: min(1050px, 100%);
+margin: 0 auto;
+}
+
+.app__workspace {
+display: grid;
+grid-template-columns: minmax(0, 1fr);
+align-items: start;
+gap: 20px;
+}
+
+.task-form,
+.task-filters,
+.task-list {
+border: 1px solid var(--color-border);
+border-radius: 10px;
+background: var(--color-surface);
+}
+
+.task-form,
+.task-filters {
+padding: 20px;
+}
+
+.task-form__heading,
+.task-filters__heading {
+margin: 0;
+font-size: 1.15rem;
+}
+
+.task-form__input,
+.task-form__select,
+.task-form__textarea,
+.task-filters__search {
+width: 100%;
+padding: 10px;
+border: 1px solid var(--color-border);
+border-radius: 5px;
+background: var(--color-control);
+color: var(--color-text);
+}
+
+.task-form__input,
+.task-form__select,
+.task-filters__search {
+min-height: 40px;
+}
+
+.app__main {
+min-width: 0;
+}
+
+.app__footer {
+padding: 20px 0 4px;
+color: var(--color-muted);
+font-size: 0.85rem;
+text-align: center;
+}
+
+@media (max-width: 700px) {
+.app-shell {
+  padding: 24px 14px;
+}
+.app__workspace {
+grid-template-columns: 1fr;
+}
+}
