@@ -4,6 +4,8 @@ interface TaskItemProps {
   task: Task
   onToggle: (taskId: string) => void
   onDelete: (taskId: string) => void
+  onEdit: (taskId: string) => void
+  onUndo: (taskId: string) => void
 }
 
 const priorityLabels = {
@@ -12,10 +14,10 @@ const priorityLabels = {
   high: 'Високий пріоритет',
 } as const
 
-function TaskItem({ task, onToggle, onDelete }: TaskItemProps) {
+function TaskItem({ task, onToggle, onDelete, onEdit, onUndo }: TaskItemProps) {
   return (
     <article
-      className={`task-item${task.completed ? ' task-item--completed' : ''}`}
+      className={`task-item${task.completed ? ' task-item--completed' : ''}${task.pendingDelete ? ' task-item--pending-delete' : ''}`}
     >
       <button
         className={`task-item__check${task.completed ? ' task-item__check--completed' : ''}`}
@@ -26,11 +28,16 @@ function TaskItem({ task, onToggle, onDelete }: TaskItemProps) {
         aria-pressed={task.completed}
         onClick={() => onToggle(task.id)}
       >
-        {task.completed ? '✓' : ''}
+        {task.completed ? '+' : ''}
       </button>
 
       <div className="task-item__body">
-        <h3 className="task-item__title">{task.title}</h3>
+        <h3 className="task-item__title">
+          {task.title}
+          {task.pendingDelete && (
+            <span className="task-item__pending-label">Буде видалено</span>
+          )}
+        </h3>
         {task.description && (
           <p className="task-item__description">{task.description}</p>
         )}
@@ -56,14 +63,33 @@ function TaskItem({ task, onToggle, onDelete }: TaskItemProps) {
         </div>
       </div>
 
-      <button
-        className="task-item__delete"
-        type="button"
-        aria-label={`Видалити «${task.title}»`}
-        onClick={() => onDelete(task.id)}
-      >
-        ×
-      </button>
+      <div className="task-item__actions">
+        {task.pendingDelete ? (
+          <button
+            className="task-item__undo"
+            type="button"
+            onClick={() => onUndo(task.id)}
+          >
+            Undo
+          </button>
+        ) : (
+          <button
+            className="task-item__edit"
+            type="button"
+            onClick={() => onEdit(task.id)}
+          >
+            Редагувати
+          </button>
+        )}
+        <button
+          className="task-item__delete"
+          type="button"
+          aria-label={`Видалити «${task.title}»`}
+          onClick={() => onDelete(task.id)}
+        >
+          ×
+        </button>
+      </div>
     </article>
   )
 }

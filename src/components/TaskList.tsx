@@ -6,6 +6,8 @@ interface TaskListProps {
   emptyMessage: string
   onToggleTask: (taskId: string) => void
   onDeleteTask: (taskId: string) => void
+  onEditTask: (taskId: string) => void
+  onUndoTask: (taskId: string) => void
 }
 
 function TaskList({
@@ -13,6 +15,8 @@ function TaskList({
   emptyMessage,
   onToggleTask,
   onDeleteTask,
+  onEditTask,
+  onUndoTask,
 }: TaskListProps) {
   return (
     <section className="task-list" aria-label="Список навчальних завдань">
@@ -30,6 +34,8 @@ function TaskList({
             task={task}
             onToggle={onToggleTask}
             onDelete={onDeleteTask}
+            onEdit={onEditTask}
+            onUndo={onUndoTask}
           />
         ))
       )}

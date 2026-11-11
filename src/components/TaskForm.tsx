@@ -1,22 +1,46 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import {
   CATEGORY_COLORS,
   type CategoryColor,
   type NewTask,
+  type Task,
   type TaskPriority,
 } from '../types/task'
 
 interface TaskFormProps {
-  onAddTask: (task: NewTask) => void
+  initialTask?: Task
+  onSubmit: (task: NewTask) => void
+  onCancel?: () => void
 }
 
-function TaskForm({ onAddTask }: TaskFormProps) {
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-  const [category, setCategory] = useState('')
-  const [categoryColor, setCategoryColor] = useState<CategoryColor>('blue')
-  const [priority, setPriority] = useState<TaskPriority>('medium')
+function TaskForm({ initialTask, onSubmit, onCancel }: TaskFormProps) {
+  const [title, setTitle] = useState(initialTask?.title ?? '')
+  const [description, setDescription] = useState(initialTask?.description ?? '')
+  const [category, setCategory] = useState(initialTask?.category ?? '')
+  const [categoryColor, setCategoryColor] = useState<CategoryColor>(
+    initialTask?.categoryColor ?? 'blue',
+  )
+  const [priority, setPriority] = useState<TaskPriority>(
+    initialTask?.priority ?? 'medium',
+  )
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (!initialTask) {
+      setTitle('')
+      setDescription('')
+      setCategory('')
+      setCategoryColor('blue')
+      setPriority('medium')
+      return
+    }
+
+    setTitle(initialTask.title)
+    setDescription(initialTask.description)
+    setCategory(initialTask.category)
+    setCategoryColor(initialTask.categoryColor)
+    setPriority(initialTask.priority)
+  }, [initialTask])
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -27,26 +51,33 @@ function TaskForm({ onAddTask }: TaskFormProps) {
       return
     }
 
-    onAddTask({
+    onSubmit({
       title: trimmedTitle,
       description: description.trim(),
       category: category.trim() || 'Навчання',
       categoryColor,
       priority,
     })
-    setTitle('')
-    setDescription('')
-    setCategory('')
-    setCategoryColor('blue')
-    setPriority('medium')
+
+    if (!initialTask) {
+      setTitle('')
+      setDescription('')
+      setCategory('')
+      setCategoryColor('blue')
+      setPriority('medium')
+    }
     setError('')
   }
 
   return (
     <form className="task-form" onSubmit={handleSubmit}>
-      <h2 className="task-form__heading">Нове завдання</h2>
+      <h2 className="task-form__heading">
+        {initialTask ? 'Редагувати завдання' : 'Нове завдання'}
+      </h2>
       <p className="task-form__hint">
-        Додай наступний крок до свого навчального плану.
+        {initialTask
+          ? 'Онови дані про завдання та збережи зміни.'
+          : 'Додай наступний крок до свого навчального плану.'}
       </p>
 
       <label className="task-form__field">
@@ -125,9 +156,20 @@ function TaskForm({ onAddTask }: TaskFormProps) {
         </select>
       </label>
 
-      <button className="task-form__submit" type="submit">
-        + Додати завдання
-      </button>
+      <div className="task-form__actions">
+        <button className="task-form__submit" type="submit">
+          {initialTask ? 'Зберегти зміни' : '+ Додати завдання'}
+        </button>
+        {initialTask && onCancel && (
+          <button
+            className="task-form__cancel"
+            type="button"
+            onClick={onCancel}
+          >
+            Скасувати
+          </button>
+        )}
+      </div>
     </form>
   )
 }
