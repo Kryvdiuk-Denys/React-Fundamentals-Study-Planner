@@ -28,6 +28,7 @@ export interface Task {
   priority: TaskPriority
   category: string
   categoryColor: CategoryColor
+  pendingDelete?: boolean
 }
 
-export type NewTask = Omit<Task, 'id' | 'completed'>
+export type NewTask = Omit<Task, 'id' | 'completed' | 'pendingDelete'>

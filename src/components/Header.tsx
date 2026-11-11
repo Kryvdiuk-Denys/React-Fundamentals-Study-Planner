@@ -8,9 +8,7 @@ function Header({ isDarkTheme, onThemeToggle }: HeaderProps) {
     <header className="app-header">
       <div>
         <h1 className="app-header__title">Study Planner</h1>
-        <p className="app-header__description">
-          Плануй справи, відмічай зроблене.
-        </p>
+       
       </div>
       <button
         className="app-header__theme-toggle"

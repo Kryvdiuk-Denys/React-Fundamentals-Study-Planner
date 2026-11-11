@@ -4,27 +4,43 @@ import TaskFilters from './components/TaskFilters'
 import TaskForm from './components/TaskForm'
 import TaskList from './components/TaskList'
 import TaskStats from './components/TaskStats'
-import { initialTasks } from './data/initialTasks'
-import type {
-  NewTask,
-  Task,
-  TaskFilter,
-  TaskPriority,
-} from './types/task'
+import Toast from './components/Toast'
+import useLocalStorage from './hooks/useLocalStorage'
+import useTaskContext from './hooks/useTaskContext'
+import type { TaskPriority } from './types/task'
 
 function App() {
-  const [tasks, setTasks] = useState<Task[]>(initialTasks)
-  const [filter, setFilter] = useState<TaskFilter>('all')
-  const [searchTerm, setSearchTerm] = useState('')
-  const [sortByPriority, setSortByPriority] = useState(false)
-  const [isDarkTheme, setIsDarkTheme] = useState(false)
+  const {
+    tasks,
+    filter,
+    setFilter,
+    addTask,
+    updateTask,
+    toggleTask,
+    requestDelete,
+    undoDelete,
+    clearCompleted,
+    resetTasks,
+    toast,
+    dismissToast,
+  } = useTaskContext()
+
+  const [searchTerm, setSearchTerm] = useLocalStorage('study-planner.search', '')
+  const [sortByPriority, setSortByPriority] = useLocalStorage(
+    'study-planner.sort',
+    false,
+  )
+  const [isDarkTheme, setIsDarkTheme] = useLocalStorage(
+    'study-planner.theme',
+    false,
+  )
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null)
 
   const completedCount = tasks.filter((task) => task.completed).length
   const pendingCount = tasks.length - completedCount
 
   const filteredTasks = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLocaleLowerCase('uk')
-
     const visibleTasks = tasks.filter((task) => {
       const matchesFilter =
         filter === 'all' ||
@@ -39,7 +55,9 @@ function App() {
       return matchesFilter && matchesSearch
     })
 
-    if (!sortByPriority) return visibleTasks
+    if (!sortByPriority) {
+      return visibleTasks
+    }
 
     const priorityOrder: Record<TaskPriority, number> = {
       high: 0,
@@ -53,33 +71,18 @@ function App() {
     )
   }, [filter, searchTerm, sortByPriority, tasks])
 
-  const addTask = (newTask: NewTask) => {
-    setTasks((currentTasks) => [
-      { ...newTask, id: crypto.randomUUID(), completed: false },
-      ...currentTasks,
-    ])
+  const editingTask = tasks.find((task) => task.id === editingTaskId) ?? null
+
+  const handleSubmitTask = (taskData: Parameters<typeof addTask>[0]) => {
+    if (editingTask) {
+      updateTask(editingTask.id, taskData)
+      setEditingTaskId(null)
+      return
+    }
+
+    addTask(taskData)
     setFilter('all')
     setSearchTerm('')
-  }
-
-  const toggleTask = (taskId: string) => {
-    setTasks((currentTasks) =>
-      currentTasks.map((task) =>
-        task.id === taskId ? { ...task, completed: !task.completed } : task,
-      ),
-    )
-  }
-
-  const deleteTask = (taskId: string) => {
-    setTasks((currentTasks) =>
-      currentTasks.filter((task) => task.id !== taskId),
-    )
-  }
-
-  const clearCompletedTasks = () => {
-    setTasks((currentTasks) =>
-      currentTasks.filter((task) => !task.completed),
-    )
   }
 
   const emptyMessage =
@@ -105,7 +108,11 @@ function App() {
 
         <div className="app__workspace">
           <aside className="app__sidebar" aria-label="Створення завдання">
-            <TaskForm onAddTask={addTask} />
+            <TaskForm
+              initialTask={editingTask ?? undefined}
+              onSubmit={handleSubmitTask}
+              onCancel={() => setEditingTaskId(null)}
+            />
           </aside>
 
           <main className="app__main">
@@ -122,20 +129,23 @@ function App() {
               onFilterChange={setFilter}
               onSearchChange={setSearchTerm}
               onSortChange={setSortByPriority}
-              onClearCompleted={clearCompletedTasks}
+              onClearCompleted={() => clearCompleted()}
+              onResetTasks={resetTasks}
             />
             <TaskList
               tasks={filteredTasks}
               emptyMessage={emptyMessage}
               onToggleTask={toggleTask}
-              onDeleteTask={deleteTask}
+              onDeleteTask={(taskId) => {
+                requestDelete(taskId)
+              }}
+              onEditTask={setEditingTaskId}
+              onUndoTask={undoDelete}
             />
           </main>
         </div>
 
-        <footer className="app__footer">
-          Плануй маленькі кроки — досягай великих цілей.
-        </footer>
+        <Toast toast={toast} onDismiss={dismissToast} />
       </div>
     </div>
   )

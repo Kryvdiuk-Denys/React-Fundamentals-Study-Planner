@@ -276,14 +276,26 @@ textarea:focus-visible {
   font-size: 0.85rem;
 }
 
-.task-form__submit {
-  width: 100%;
-  min-height: 42px;
+.task-form__actions {
+  display: flex;
+  gap: 10px;
   margin-top: 18px;
+}
+
+.task-form__submit,
+.task-form__cancel {
+  flex: 1;
+  min-height: 42px;
   border: 0;
   border-radius: 5px;
   background: var(--color-primary);
   color: #fff;
+}
+
+.task-form__cancel {
+  background: var(--color-control-muted);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
 }
 
 .task-form__submit:hover {
@@ -367,7 +379,13 @@ textarea:focus-visible {
   color: var(--color-text);
 }
 
-.task-filters__clear {
+.task-filters__button-group {
+  display: flex;
+  gap: 8px;
+}
+
+.task-filters__clear,
+.task-filters__reset {
   min-height: 38px;
   padding: 7px 11px;
   border: 1px solid var(--color-border);
@@ -376,7 +394,8 @@ textarea:focus-visible {
   color: var(--color-text);
 }
 
-.task-filters__clear:hover:not(:disabled) {
+.task-filters__clear:hover:not(:disabled),
+.task-filters__reset:hover {
   border-color: var(--color-primary);
 }
 
@@ -495,6 +514,14 @@ textarea:focus-visible {
   text-decoration: line-through;
 }
 
+.task-item__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.task-item__edit,
+.task-item__undo,
 .task-item__delete {
   padding: 4px 8px;
   border: 1px solid var(--color-border);
@@ -503,8 +530,88 @@ textarea:focus-visible {
   color: var(--color-text);
 }
 
-.task-item__delete:hover {
+.task-item__undo {
+  background: #f2dd8a;
+  color: #3b2d00;
+}
+
+.task-item__delete:hover,
+.task-item__edit:hover,
+.task-item__undo:hover {
   border-color: var(--color-primary);
+}
+
+.task-item__pending-label {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 3px 6px;
+  border-radius: 999px;
+  background: #fff1c4;
+  color: #7b5600;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.task-item--pending-delete {
+  opacity: 0.72;
+  filter: grayscale(0.15);
+}
+
+.toast {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: min(360px, calc(100vw - 32px));
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #1f2937;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.18);
+  color: #fff;
+}
+
+.toast--success {
+  background: #2f7d5b;
+}
+
+.toast--info {
+  background: #2f5067;
+}
+
+.toast--error {
+  background: #a74b4b;
+}
+
+.toast__content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.toast__message {
+  font-size: 0.92rem;
+}
+
+.toast__action,
+.toast__close {
+  border: 0;
+  background: transparent;
+  color: inherit;
+}
+
+.toast__action {
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.toast__close {
+  font-size: 1.1rem;
 }
 
 .app__footer {
