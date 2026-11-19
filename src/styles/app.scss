@@ -94,6 +94,46 @@ min-height: 40px;
 min-width: 0;
 }
 
+.app__state {
+  min-height: 180px;
+  display: grid;
+  place-content: center;
+  gap: 10px;
+  text-align: center;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+}
+
+.app__state button,
+.app__pagination button,
+.app__details-close {
+  cursor: pointer;
+}
+
+.app__pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.app__details {
+  position: relative;
+  margin-top: 16px;
+  padding: 20px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+}
+
+.app__details-close {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+}
+
 .app__footer {
 padding: 20px 0 4px;
 color: var(--color-muted);

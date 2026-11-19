@@ -10,7 +10,7 @@ import './TaskForm.scss'
 
 interface TaskFormProps {
   initialTask?: Task
-  onSubmit: (task: NewTask) => void
+  onSubmit: (task: NewTask) => void | boolean | Promise<void | boolean>
   onCancel?: () => void
 }
 
@@ -26,7 +26,7 @@ function TaskForm({ initialTask, onSubmit, onCancel }: TaskFormProps) {
   )
   const [error, setError] = useState('')
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     const trimmedTitle = title.trim()
 
@@ -35,7 +35,7 @@ function TaskForm({ initialTask, onSubmit, onCancel }: TaskFormProps) {
       return
     }
 
-    onSubmit({
+    const result = await onSubmit({
       title: trimmedTitle,
       description: description.trim(),
       category: category.trim() || 'Навчання',
@@ -43,7 +43,7 @@ function TaskForm({ initialTask, onSubmit, onCancel }: TaskFormProps) {
       priority,
     })
 
-    if (!initialTask) {
+    if (!initialTask && result !== false) {
       setTitle('')
       setDescription('')
       setCategory('')

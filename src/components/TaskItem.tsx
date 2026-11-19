@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { CATEGORY_COLOR_VALUES, type Task } from '../types/task'
 import useTaskContext from '../hooks/useTaskContext'
 import './TaskItem.scss'
@@ -5,6 +6,7 @@ import './TaskItem.scss'
 interface TaskItemProps {
   task: Task
   onEdit: (taskId: string) => void
+  onDetails: (taskId: string) => void
 }
 
 const priorityLabels = {
@@ -13,8 +15,9 @@ const priorityLabels = {
   high: 'Високий пріоритет',
 } as const
 
-function TaskItem({ task, onEdit }: TaskItemProps) {
-  const { toggleTask, requestDelete, undoDelete } = useTaskContext()
+function TaskItem({ task, onEdit, onDetails }: TaskItemProps) {
+  const { toggleTask, deleteTask } = useTaskContext()
+  const [deleteConfirmation, setDeleteConfirmation] = useState(false)
 
   return (
     <article
@@ -66,15 +69,7 @@ function TaskItem({ task, onEdit }: TaskItemProps) {
       </div>
 
       <div className="task-item__actions">
-        {task.pendingDelete ? (
-          <button
-            className="task-item__undo"
-            type="button"
-            onClick={() => undoDelete(task.id)}
-          >
-            Undo
-          </button>
-        ) : (
+        {!task.pendingDelete && (
           <button
             className="task-item__edit"
             type="button"
@@ -84,15 +79,28 @@ function TaskItem({ task, onEdit }: TaskItemProps) {
           </button>
         )}
         <button
+          className="task-item__edit"
+          type="button"
+          onClick={() => onDetails(task.id)}
+        >
+          Деталі
+        </button>
+        <button
           className="task-item__delete"
           type="button"
           aria-label={`Видалити «${task.title}»`}
-          disabled={task.pendingDelete}
-          onClick={() => requestDelete(task.id)}
+          onClick={() => setDeleteConfirmation(true)}
         >
           ×
         </button>
       </div>
+      {deleteConfirmation && (
+        <div className="task-item__delete-confirm" role="group" aria-label="Підтвердження видалення">
+          <span>Видалити завдання?</span>
+          <button type="button" onClick={() => void deleteTask(task.id)}>Так, видалити</button>
+          <button type="button" onClick={() => setDeleteConfirmation(false)}>Скасувати</button>
+        </div>
+      )}
     </article>
   )
 }

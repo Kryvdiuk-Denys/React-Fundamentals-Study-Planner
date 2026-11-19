@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Header from './components/Header'
 import TaskFilters from './components/TaskFilters'
 import TaskForm from './components/TaskForm'
@@ -6,24 +6,34 @@ import TaskList from './components/TaskList'
 import TaskStats from './components/TaskStats'
 import Toast from './components/Toast'
 import useLocalStorage from './hooks/useLocalStorage'
+import useDebounce from './hooks/useDebounce'
 import useTaskContext from './hooks/useTaskContext'
 import type { TaskPriority } from './types/task'
+import { taskRepository } from './repositories/taskRepository'
+import type { Task } from './types/task'
 import './styles/app.scss'
 
 function App() {
   const {
     tasks,
+    loading,
+    error,
+    page,
+    pageSize,
+    total,
+    reloadTasks,
+    changePage,
     filter,
     setFilter,
     addTask,
     updateTask,
     clearCompleted,
-    resetTasks,
     toast,
     dismissToast,
   } = useTaskContext()
 
   const [searchTerm, setSearchTerm] = useLocalStorage('study-planner.search', '')
+  const debouncedSearchTerm = useDebounce(searchTerm, 300)
   const [sortByPriority, setSortByPriority] = useLocalStorage(
     'study-planner.sort',
     false,
@@ -33,12 +43,44 @@ function App() {
     false,
   )
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null)
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null)
+  const [detailsLoading, setDetailsLoading] = useState(false)
+  const [detailsError, setDetailsError] = useState<string | null>(null)
+
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!selectedTaskId) return undefined
+    const controller = new AbortController()
+
+    taskRepository.getById(selectedTaskId, controller.signal)
+      .then((task) => {
+        if (!controller.signal.aborted) setSelectedTask(task)
+      })
+      .catch((requestError: unknown) => {
+        if (!controller.signal.aborted) {
+          setDetailsError(requestError instanceof Error ? requestError.message : 'Не вдалося завантажити деталі.')
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setDetailsLoading(false)
+      })
+
+    return () => controller.abort()
+  }, [selectedTaskId])
+
+  const openTaskDetails = (taskId: string) => {
+    setSelectedTask(null)
+    setDetailsLoading(true)
+    setDetailsError(null)
+    setSelectedTaskId(taskId)
+  }
 
   const completedCount = tasks.filter((task) => task.completed).length
   const pendingCount = tasks.length - completedCount
 
   const filteredTasks = useMemo(() => {
-    const normalizedSearch = searchTerm.trim().toLocaleLowerCase('uk')
+    const normalizedSearch = debouncedSearchTerm.trim().toLocaleLowerCase('uk')
     const visibleTasks = tasks.filter((task) => {
       const matchesFilter =
         filter === 'all' ||
@@ -67,26 +109,29 @@ function App() {
       (first, second) =>
         priorityOrder[first.priority] - priorityOrder[second.priority],
     )
-  }, [filter, searchTerm, sortByPriority, tasks])
+  }, [debouncedSearchTerm, filter, sortByPriority, tasks])
 
   const editingTask = tasks.find((task) => task.id === editingTaskId) ?? null
 
-  const handleSubmitTask = (taskData: Parameters<typeof addTask>[0]) => {
+  const handleSubmitTask = async (taskData: Parameters<typeof addTask>[0]) => {
     if (editingTask) {
-      updateTask(editingTask.id, taskData)
+      await updateTask(editingTask.id, taskData)
       setEditingTaskId(null)
       return
     }
 
-    addTask(taskData)
-    setFilter('all')
-    setSearchTerm('')
+    const created = await addTask(taskData)
+    if (created) {
+      setFilter('all')
+      setSearchTerm('')
+    }
+    return created
   }
 
   const emptyMessage =
     tasks.length === 0
-      ? 'Завдань поки немає. Додайте перше навчальне завдання.'
-      : filteredTasks.length === 0 && searchTerm.trim().length > 0
+      ? 'Завдань не знайдено.'
+      : filteredTasks.length === 0 && debouncedSearchTerm.trim().length > 0
         ? 'За вашим запитом нічого не знайдено.'
         : 'За цим фільтром завдань немає.'
 
@@ -129,13 +174,45 @@ function App() {
               onSearchChange={setSearchTerm}
               onSortChange={setSortByPriority}
               onClearCompleted={clearCompleted}
-              onResetTasks={resetTasks}
             />
-            <TaskList
-              tasks={filteredTasks}
-              emptyMessage={emptyMessage}
-              onEditTask={setEditingTaskId}
-            />
+            {loading && <div className="app__state" role="status">Loading...</div>}
+            {!loading && error && (
+              <div className="app__state app__state--error" role="alert">
+                <p>Помилка завантаження.</p>
+                <button type="button" onClick={reloadTasks}>Спробувати ще</button>
+              </div>
+            )}
+            {!loading && !error && (
+              <TaskList
+                tasks={filteredTasks}
+                emptyMessage={emptyMessage}
+                onEditTask={setEditingTaskId}
+                onDetailsTask={openTaskDetails}
+              />
+            )}
+            {!loading && !error && (
+              <nav className="app__pagination" aria-label="Пагінація">
+                <button type="button" disabled={page === 1} onClick={() => changePage(page - 1)}>Попередня</button>
+                <span>Сторінка {page} з {Math.max(1, Math.ceil(total / pageSize))}</span>
+                <button type="button" disabled={page >= Math.ceil(total / pageSize)} onClick={() => changePage(page + 1)}>Наступна</button>
+              </nav>
+            )}
+            {(detailsLoading || detailsError || selectedTask) && (
+              <section className="app__details" aria-live="polite">
+                <button type="button" className="app__details-close" onClick={() => { setSelectedTask(null); setSelectedTaskId(null); setDetailsLoading(false); setDetailsError(null) }}>×</button>
+                {detailsLoading && <p>Loading...</p>}
+                {detailsError && <p role="alert">Помилка завантаження: {detailsError}</p>}
+                {selectedTask && (
+                  <>
+                    <h2>{selectedTask.title}</h2>
+                    <p>{selectedTask.description || 'Опис відсутній'}</p>
+                    <p><strong>Категорія:</strong> {selectedTask.category}</p>
+                    <p><strong>Пріоритет:</strong> {selectedTask.priority}</p>
+                    <p><strong>Статус:</strong> {selectedTask.completed ? 'Виконано' : 'У процесі'}</p>
+                  </>
+                )}
+              </section>
+            )}
           </main>
         </div>
 
