@@ -14,15 +14,20 @@ export interface ToastState {
 
 interface TaskContextValue {
   tasks: Task[]
+  loading: boolean
+  error: string | null
+  page: number
+  pageSize: number
+  total: number
+  reloadTasks: () => void
+  changePage: (page: number) => void
   filter: TaskFilter
   setFilter: (filter: TaskFilter) => void
-  addTask: (task: NewTask) => void
-  updateTask: (taskId: string, updates: Partial<NewTask>) => void
-  toggleTask: (taskId: string) => void
-  requestDelete: (taskId: string) => void
-  undoDelete: (taskId: string) => void
-  clearCompleted: () => void
-  resetTasks: () => void
+  addTask: (task: NewTask) => Promise<boolean>
+  updateTask: (taskId: string, updates: Partial<NewTask>) => Promise<void>
+  toggleTask: (taskId: string) => Promise<void>
+  deleteTask: (taskId: string) => Promise<void>
+  clearCompleted: () => Promise<void>
   toast: ToastState | null
   dismissToast: () => void
 }

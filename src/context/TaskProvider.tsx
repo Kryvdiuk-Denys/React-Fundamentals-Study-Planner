@@ -1,246 +1,155 @@
-import { useCallback, useEffect, useMemo, useReducer, useState, type ReactNode } from 'react'
-import { initialTasks } from '../data/initialTasks'
-import { CATEGORY_COLORS, type NewTask, type Task, type TaskFilter } from '../types/task'
-import { taskReducer } from '../reducers/taskReducer'
-import TaskContext, { type ToastState, type ToastVariant } from './TaskContext'
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { taskRepository } from '../repositories/taskRepository'
+import type { NewTask, Task, TaskFilter } from '../types/task'
 import useLocalStorage from '../hooks/useLocalStorage'
+import TaskContext, { type ToastState, type ToastVariant } from './TaskContext'
 
-const STORAGE_KEY = 'study-planner.tasks'
-
-function readStoredTasks(): Task[] {
-  if (typeof window === 'undefined') {
-    return initialTasks
-  }
-
-  try {
-    const storedTasks = window.localStorage.getItem(STORAGE_KEY)
-    if (!storedTasks) {
-      return initialTasks
-    }
-
-    const parsedTasks: unknown = JSON.parse(storedTasks)
-    if (!Array.isArray(parsedTasks) || !parsedTasks.every(isStoredTask)) {
-      return initialTasks
-    }
-
-    return parsedTasks.map((task) => ({ ...task, pendingDelete: false }))
-  } catch {
-    return initialTasks
-  }
-}
-
-function isStoredTask(value: unknown): value is Task {
-  if (typeof value !== 'object' || value === null) {
-    return false
-  }
-
-  const task = value as Record<string, unknown>
-  return (
-    typeof task.id === 'string' &&
-    typeof task.title === 'string' &&
-    typeof task.description === 'string' &&
-    typeof task.completed === 'boolean' &&
-    (task.priority === 'low' ||
-      task.priority === 'medium' ||
-      task.priority === 'high') &&
-    typeof task.category === 'string' &&
-    CATEGORY_COLORS.some((color) => color.id === task.categoryColor)
-  )
-}
+const PAGE_SIZE = 10
 
 export function TaskProvider({ children }: { children: ReactNode }) {
-  const [tasks, dispatch] = useReducer(taskReducer, undefined, readStoredTasks)
-  const [filter, setFilter] = useLocalStorage<TaskFilter>(
-    'study-planner.filter',
-    'all',
-  )
+  const [tasks, setTasks] = useState<Task[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
+  const [total, setTotal] = useState(0)
+  const [reloadKey, setReloadKey] = useState(0)
+  const [filter, setFilter] = useLocalStorage<TaskFilter>('study-planner.filter', 'all')
   const [toast, setToast] = useState<ToastState | null>(null)
 
+  const reloadTasks = useCallback(() => {
+    setLoading(true)
+    setError(null)
+    setReloadKey((key) => key + 1)
+  }, [])
+
   useEffect(() => {
-    const savedTasks = tasks.map(
-      ({ id, title, description, completed, priority, category, categoryColor }) => ({
-        id,
-        title,
-        description,
-        completed,
-        priority,
-        category,
-        categoryColor,
-      }),
-    )
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(savedTasks))
-    } catch (error) {
-      console.error('Unable to save study planner tasks to localStorage.', error)
-    }
+    const controller = new AbortController()
+
+    taskRepository
+      .getAll(PAGE_SIZE, (page - 1) * PAGE_SIZE, controller.signal)
+      .then((result) => {
+        if (controller.signal.aborted) return
+        setTasks(result.tasks)
+        setTotal(result.total)
+      })
+      .catch((requestError: unknown) => {
+        if (!controller.signal.aborted) {
+          setError(requestError instanceof Error ? requestError.message : 'Не вдалося завантажити завдання.')
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false)
+      })
+
+    return () => controller.abort()
+  }, [page, reloadKey])
+
+  useEffect(() => {
+    document.title = `Study Planner — ${tasks.filter((task) => !task.completed).length} active tasks`
   }, [tasks])
 
   useEffect(() => {
-    const activeTasks = tasks.filter((task) => !task.completed).length
-    document.title = `Study Planner — ${activeTasks} active tasks`
-  }, [tasks])
-
-  useEffect(() => {
-    if (!toast) {
-      return undefined
-    }
-
-    const timer = window.setTimeout(() => {
-      setToast(null)
-    }, toast.durationMs)
-
-    return () => {
-      window.clearTimeout(timer)
-    }
+    if (!toast) return undefined
+    const timer = window.setTimeout(() => setToast(null), toast.durationMs)
+    return () => window.clearTimeout(timer)
   }, [toast])
 
-  const dismissToast = useCallback(() => {
-    setToast(null)
+  const showToast = useCallback((message: string, variant: ToastVariant = 'info', options?: { durationMs?: number }) => {
+    setToast({
+      id: Date.now() + Math.random(),
+      message,
+      variant,
+      durationMs: options?.durationMs ?? 3500,
+    })
   }, [])
 
-  const showToast = useCallback(
-    (
-      message: string,
-      variant: ToastVariant = 'info',
-      options?: { durationMs?: number; actionLabel?: string; onAction?: () => void },
-    ) => {
-      setToast({
-        id: Date.now() + Math.random(),
-        message,
-        variant,
-        durationMs: options?.durationMs ?? 4000,
-        actionLabel: options?.actionLabel,
-        onAction: options?.onAction,
-      })
-    },
-    [],
-  )
+  const dismissToast = useCallback(() => setToast(null), [])
 
-  const addTask = useCallback(
-    (newTask: NewTask) => {
-      dispatch({
-        type: 'add',
-        payload: { task: newTask, id: crypto.randomUUID() },
-      })
-      showToast('Завдання успішно створено.', 'success', { durationMs: 3500 })
-    },
-    [showToast],
-  )
-
-  const updateTask = useCallback(
-    (taskId: string, updates: Partial<NewTask>) => {
-      dispatch({ type: 'update', payload: { taskId, updates } })
-      showToast('Завдання успішно оновлено.', 'success', { durationMs: 3500 })
-    },
-    [showToast],
-  )
-
-  const toggleTask = useCallback((taskId: string) => {
-    dispatch({ type: 'toggle', payload: { taskId } })
-  }, [])
-
-  const requestDelete = useCallback(
-    (taskId: string) => {
-      const activePendingDelete = tasks.find((task) => task.pendingDelete)
-      if (activePendingDelete) {
-        showToast(
-          'Спочатку скасуйте або дочекайтеся поточного видалення.',
-          'error',
-          { durationMs: 3500 },
-        )
-        return
-      }
-
-      if (!tasks.some((task) => task.id === taskId)) {
-        showToast('Не вдалося знайти це завдання.', 'error')
-        return
-      }
-
-      dispatch({ type: 'requestDelete', payload: { taskId } })
-      showToast('Завдання буде видалено через 5 секунд.', 'info', {
-        durationMs: 5000,
-        actionLabel: 'Скасувати',
-        onAction: () => {
-          dispatch({ type: 'undoDelete', payload: { taskId } })
-          showToast('Видалення скасовано.', 'success', { durationMs: 2500 })
-        },
-      })
-    },
-    [showToast, tasks],
-  )
-
-  const pendingDeleteTask = useMemo(
-    () => tasks.find((task) => task.pendingDelete) ?? null,
-    [tasks],
-  )
-
-  useEffect(() => {
-    if (!pendingDeleteTask) {
-      return undefined
+  const addTask = useCallback(async (newTask: NewTask) => {
+    try {
+      const created = await taskRepository.create(newTask)
+      setTasks((current) => [created, ...current].slice(0, PAGE_SIZE))
+      setTotal((current) => current + 1)
+      showToast('Завдання успішно створено.', 'success')
+      return true
+    } catch (requestError) {
+      showToast(requestError instanceof Error ? requestError.message : 'Не вдалося створити завдання.', 'error')
+      return false
     }
+  }, [showToast])
 
-    const timeoutId = window.setTimeout(() => {
-      dispatch({ type: 'confirmDelete', payload: { taskId: pendingDeleteTask.id } })
-      showToast('Завдання видалено.', 'success', { durationMs: 2500 })
-    }, 5000)
-
-    return () => {
-      window.clearTimeout(timeoutId)
+  const updateTask = useCallback(async (taskId: string, updates: Partial<NewTask>) => {
+    try {
+      const updated = await taskRepository.update(taskId, updates)
+      setTasks((current) => current.map((task) => task.id === taskId ? { ...task, ...updated } : task))
+      showToast('Завдання успішно оновлено.', 'success')
+    } catch (requestError) {
+      showToast(requestError instanceof Error ? requestError.message : 'Не вдалося оновити завдання.', 'error')
     }
-  }, [pendingDeleteTask, showToast])
+  }, [showToast])
 
-  const undoDelete = useCallback(
-    (taskId: string) => {
-      dispatch({ type: 'undoDelete', payload: { taskId } })
-      setToast(null)
-      showToast('Видалення скасовано.', 'success', { durationMs: 2500 })
-    },
-    [showToast],
-  )
+  const toggleTask = useCallback(async (taskId: string) => {
+    const current = tasks.find((task) => task.id === taskId)
+    if (!current) return
 
-  const clearCompleted = useCallback(() => {
-    const completedTasks = tasks
-      .filter((task) => task.completed)
-      .map((task) => ({ ...task, pendingDelete: false }))
+    const completed = !current.completed
+    setTasks((items) => items.map((task) => task.id === taskId ? { ...task, completed } : task))
+    try {
+      await taskRepository.update(taskId, { completed })
+    } catch (requestError) {
+      setTasks((items) => items.map((task) => task.id === taskId ? { ...task, completed: current.completed } : task))
+      showToast(requestError instanceof Error ? requestError.message : 'Не вдалося змінити статус.', 'error')
+    }
+  }, [showToast, tasks])
 
-    if (completedTasks.length === 0) {
+  const deleteTask = useCallback(async (taskId: string) => {
+    try {
+      await taskRepository.delete(taskId)
+      setTasks((current) => current.filter((task) => task.id !== taskId))
+      setTotal((current) => Math.max(0, current - 1))
+      showToast('Завдання видалено.', 'success')
+    } catch (requestError) {
+      showToast(requestError instanceof Error ? requestError.message : 'Не вдалося видалити завдання.', 'error')
+    }
+  }, [showToast])
+
+  const clearCompleted = useCallback(async () => {
+    const completed = tasks.filter((task) => task.completed)
+    if (completed.length === 0) {
       showToast('Немає виконаних завдань для очищення.', 'error')
       return
     }
-
-    dispatch({ type: 'clearCompleted' })
-    showToast('Виконані завдання очищено.', 'info', {
-      durationMs: 5000,
-      actionLabel: 'Скасувати',
-      onAction: () => {
-        dispatch({ type: 'restoreTasks', payload: completedTasks })
-        showToast('Очищення скасовано.', 'success', { durationMs: 2500 })
-      },
-    })
+    await Promise.allSettled(completed.map((task) => taskRepository.delete(task.id)))
+    setTasks((current) => current.filter((task) => !task.completed))
+    setTotal((current) => Math.max(0, current - completed.length))
+    showToast('Виконані завдання очищено.', 'success')
   }, [showToast, tasks])
 
-  const resetTasks = useCallback(() => {
-    dispatch({ type: 'reset', payload: initialTasks })
-    showToast('Дані скинуто до початкових.', 'info', { durationMs: 3000 })
-  }, [showToast])
+  const changePage = useCallback((nextPage: number) => {
+    setLoading(true)
+    setError(null)
+    setPage(Math.max(1, nextPage))
+  }, [])
 
-  const value = useMemo(
-    () => ({
-      tasks,
-      filter,
-      setFilter,
-      addTask,
-      updateTask,
-      toggleTask,
-      requestDelete,
-      undoDelete,
-      clearCompleted,
-      resetTasks,
-      toast,
-      dismissToast,
-    }),
-    [addTask, clearCompleted, dismissToast, filter, requestDelete, resetTasks, setFilter, tasks, toast, toggleTask, undoDelete, updateTask],
-  )
+  const value = useMemo(() => ({
+    tasks,
+    loading,
+    error,
+    page,
+    pageSize: PAGE_SIZE,
+    total,
+    reloadTasks,
+    changePage,
+    filter,
+    setFilter,
+    addTask,
+    updateTask,
+    toggleTask,
+    deleteTask,
+    clearCompleted,
+    toast,
+    dismissToast,
+  }), [addTask, changePage, clearCompleted, deleteTask, dismissToast, error, filter, loading, page, reloadTasks, setFilter, tasks, toggleTask, toast, total, updateTask])
 
   return <TaskContext.Provider value={value}>{children}</TaskContext.Provider>
 }

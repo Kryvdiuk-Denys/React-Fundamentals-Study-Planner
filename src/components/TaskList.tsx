@@ -6,12 +6,14 @@ interface TaskListProps {
   tasks: Task[]
   emptyMessage: string
   onEditTask: (taskId: string) => void
+  onDetailsTask: (taskId: string) => void
 }
 
 function TaskList({
   tasks,
   emptyMessage,
   onEditTask,
+  onDetailsTask,
 }: TaskListProps) {
   return (
     <section className="task-list" aria-label="Список навчальних завдань">
@@ -28,6 +30,7 @@ function TaskList({
             key={task.id}
             task={task}
             onEdit={onEditTask}
+            onDetails={onDetailsTask}
           />
         ))
       )}

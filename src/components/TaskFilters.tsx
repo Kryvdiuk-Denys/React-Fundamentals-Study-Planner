@@ -11,7 +11,6 @@ interface TaskFiltersProps {
   onSearchChange: (searchTerm: string) => void
   onSortChange: (sortByPriority: boolean) => void
   onClearCompleted: () => void
-  onResetTasks: () => void
 }
 
 const filters: { value: TaskFilter; label: string }[] = [
@@ -30,7 +29,6 @@ function TaskFilters({
   onSearchChange,
   onSortChange,
   onClearCompleted,
-  onResetTasks,
 }: TaskFiltersProps) {
   return (
     <section className="task-filters" aria-label="Фільтри завдань">
@@ -89,13 +87,6 @@ function TaskFilters({
             disabled={completedCount === 0}
           >
             Очистити виконані ({completedCount})
-          </button>
-          <button
-            className="task-filters__reset"
-            type="button"
-            onClick={onResetTasks}
-          >
-            Скинути дані
           </button>
         </div>
       </div>
