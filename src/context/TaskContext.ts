@@ -24,7 +24,7 @@ interface TaskContextValue {
   filter: TaskFilter
   setFilter: (filter: TaskFilter) => void
   addTask: (task: NewTask) => Promise<boolean>
-  updateTask: (taskId: string, updates: Partial<NewTask>) => Promise<void>
+  updateTask: (taskId: string, updates: Partial<NewTask>) => Promise<boolean>
   toggleTask: (taskId: string) => Promise<void>
   deleteTask: (taskId: string) => Promise<void>
   clearCompleted: () => Promise<void>

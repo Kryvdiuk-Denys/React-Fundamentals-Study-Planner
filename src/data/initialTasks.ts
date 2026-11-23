@@ -9,6 +9,8 @@ export const initialTasks: Task[] = [
     priority: 'high',
     category: 'Покупки',
     categoryColor: 'coral',
+    createdBy: 'Клієнт',
+    createdAt: '2026-01-01T09:00:00.000Z',
   },
   {
     id: 'task-plants',
@@ -18,6 +20,8 @@ export const initialTasks: Task[] = [
     priority: 'medium',
     category: 'Дім',
     categoryColor: 'green',
+    createdBy: 'Клієнт',
+    createdAt: '2026-01-02T10:00:00.000Z',
   },
   {
     id: 'task-walk',
@@ -27,5 +31,7 @@ export const initialTasks: Task[] = [
     priority: 'low',
     category: 'Відпочинок',
     categoryColor: 'blue',
+    createdBy: 'Клієнт',
+    createdAt: '2026-01-03T11:00:00.000Z',
   },
 ]

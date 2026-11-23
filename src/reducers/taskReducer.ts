@@ -20,6 +20,8 @@ export function taskReducer(tasks: Task[], action: TaskAction): Task[] {
           id: action.payload.id,
           completed: false,
           pendingDelete: false,
+          createdBy: 'Клієнт',
+          createdAt: new Date().toISOString(),
         },
         ...tasks,
       ]

@@ -1,0 +1,58 @@
+.task-dialog {
+  width: min(520px, calc(100% - 28px));
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.task-dialog::backdrop {
+  background: rgb(20 28 40 / 55%);
+}
+
+.task-dialog__form {
+  display: grid;
+  gap: 14px;
+  padding: 24px;
+}
+
+.task-dialog__title {
+  margin: 0 0 4px;
+}
+
+.task-dialog__field {
+  display: grid;
+  gap: 6px;
+}
+
+.task-dialog__field input,
+.task-dialog__field textarea,
+.task-dialog__field select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-control);
+  color: var(--color-text);
+}
+
+.task-dialog__error {
+  color: #b42318;
+  font-size: 0.85rem;
+}
+
+.task-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.task-dialog__actions button {
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-control-muted);
+  color: var(--color-text);
+}

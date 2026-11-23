@@ -1,19 +1,20 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { taskRepository } from '../repositories/taskRepository'
 import type { NewTask, Task, TaskFilter } from '../types/task'
-import useLocalStorage from '../hooks/useLocalStorage'
 import TaskContext, { type ToastState, type ToastVariant } from './TaskContext'
+import { useAuth } from './AuthContext'
 
 const PAGE_SIZE = 10
 
 export function TaskProvider({ children }: { children: ReactNode }) {
+  const { isAuthenticated } = useAuth()
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
   const [reloadKey, setReloadKey] = useState(0)
-  const [filter, setFilter] = useLocalStorage<TaskFilter>('study-planner.filter', 'all')
+  const [filter, setFilter] = useState<TaskFilter>('all')
   const [toast, setToast] = useState<ToastState | null>(null)
 
   const reloadTasks = useCallback(() => {
@@ -66,6 +67,10 @@ export function TaskProvider({ children }: { children: ReactNode }) {
   const dismissToast = useCallback(() => setToast(null), [])
 
   const addTask = useCallback(async (newTask: NewTask) => {
+    if (!isAuthenticated) {
+      showToast('Для створення завдання потрібно увійти.', 'error')
+      return false
+    }
     try {
       const created = await taskRepository.create(newTask)
       setTasks((current) => [created, ...current].slice(0, PAGE_SIZE))
@@ -76,19 +81,29 @@ export function TaskProvider({ children }: { children: ReactNode }) {
       showToast(requestError instanceof Error ? requestError.message : 'Не вдалося створити завдання.', 'error')
       return false
     }
-  }, [showToast])
+  }, [isAuthenticated, showToast])
 
   const updateTask = useCallback(async (taskId: string, updates: Partial<NewTask>) => {
+    if (!isAuthenticated) {
+      showToast('Для редагування завдання потрібно увійти.', 'error')
+      return false
+    }
     try {
       const updated = await taskRepository.update(taskId, updates)
       setTasks((current) => current.map((task) => task.id === taskId ? { ...task, ...updated } : task))
       showToast('Завдання успішно оновлено.', 'success')
+      return true
     } catch (requestError) {
       showToast(requestError instanceof Error ? requestError.message : 'Не вдалося оновити завдання.', 'error')
+      return false
     }
-  }, [showToast])
+  }, [isAuthenticated, showToast])
 
   const toggleTask = useCallback(async (taskId: string) => {
+    if (!isAuthenticated) {
+      showToast('Для зміни статусу потрібно увійти.', 'error')
+      return
+    }
     const current = tasks.find((task) => task.id === taskId)
     if (!current) return
 
@@ -100,9 +115,13 @@ export function TaskProvider({ children }: { children: ReactNode }) {
       setTasks((items) => items.map((task) => task.id === taskId ? { ...task, completed: current.completed } : task))
       showToast(requestError instanceof Error ? requestError.message : 'Не вдалося змінити статус.', 'error')
     }
-  }, [showToast, tasks])
+  }, [isAuthenticated, showToast, tasks])
 
   const deleteTask = useCallback(async (taskId: string) => {
+    if (!isAuthenticated) {
+      showToast('Для видалення завдання потрібно увійти.', 'error')
+      return
+    }
     try {
       await taskRepository.delete(taskId)
       setTasks((current) => current.filter((task) => task.id !== taskId))
@@ -111,9 +130,13 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     } catch (requestError) {
       showToast(requestError instanceof Error ? requestError.message : 'Не вдалося видалити завдання.', 'error')
     }
-  }, [showToast])
+  }, [isAuthenticated, showToast])
 
   const clearCompleted = useCallback(async () => {
+    if (!isAuthenticated) {
+      showToast('Для видалення завдань потрібно увійти.', 'error')
+      return
+    }
     const completed = tasks.filter((task) => task.completed)
     if (completed.length === 0) {
       showToast('Немає виконаних завдань для очищення.', 'error')
@@ -123,7 +146,7 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     setTasks((current) => current.filter((task) => !task.completed))
     setTotal((current) => Math.max(0, current - completed.length))
     showToast('Виконані завдання очищено.', 'success')
-  }, [showToast, tasks])
+  }, [isAuthenticated, showToast, tasks])
 
   const changePage = useCallback((nextPage: number) => {
     setLoading(true)
