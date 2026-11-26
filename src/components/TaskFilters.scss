@@ -15,12 +15,44 @@ color: var(--color-muted);
 font-size: 0.9rem;
 }
 
+.task-filters__top-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.task-filters__create {
+  min-height: 38px;
+  padding: 7px 11px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-control-muted);
+  color: var(--color-text);
+}
+
+.task-filters__create:hover {
+  border-color: var(--color-primary);
+}
+
 .task-filters__search {
 margin-bottom: 12px;
 }
 
 .task-filters__search-label {
 display: block;
+}
+
+.task-filters__priority-label {
+  display: grid;
+  grid-template-columns: max-content minmax(160px, 220px);
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.task-filters__priority-label .task-form__label {
+  color: var(--color-muted);
+  font-size: 0.9rem;
 }
 
 .task-filters__tabs {

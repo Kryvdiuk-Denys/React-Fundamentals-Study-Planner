@@ -1,5 +1,5 @@
 import { createContext } from 'react'
-import type { NewTask, Task, TaskFilter } from '../types/task'
+import type { NewTask, Task } from '../types/task'
 
 export type ToastVariant = 'success' | 'info' | 'error'
 
@@ -21,10 +21,8 @@ interface TaskContextValue {
   total: number
   reloadTasks: () => void
   changePage: (page: number) => void
-  filter: TaskFilter
-  setFilter: (filter: TaskFilter) => void
   addTask: (task: NewTask) => Promise<boolean>
-  updateTask: (taskId: string, updates: Partial<NewTask>) => Promise<void>
+  updateTask: (taskId: string, updates: Partial<NewTask>) => Promise<boolean>
   toggleTask: (taskId: string) => Promise<void>
   deleteTask: (taskId: string) => Promise<void>
   clearCompleted: () => Promise<void>

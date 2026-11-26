@@ -10,6 +10,7 @@ export interface TaskPage {
 }
 
 function toTask(todo: ApiTodo): Task {
+  const createdAt = new Date().toISOString()
   return {
     id: String(todo.id),
     title: todo.todo,
@@ -18,6 +19,8 @@ function toTask(todo: ApiTodo): Task {
     priority: 'medium',
     category: 'General',
     categoryColor: 'blue',
+    createdBy: `user-${todo.userId}`,
+    createdAt,
   }
 }
 

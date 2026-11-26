@@ -2,6 +2,9 @@ import { useState } from 'react'
 import { CATEGORY_COLOR_VALUES, type Task } from '../types/task'
 import useTaskContext from '../hooks/useTaskContext'
 import './TaskItem.scss'
+import { useNavigate } from 'react-router'
+import { Link } from 'react-router'
+import { useAuth } from '../context/AuthContext'
 
 interface TaskItemProps {
   task: Task
@@ -17,7 +20,15 @@ const priorityLabels = {
 
 function TaskItem({ task, onEdit, onDetails }: TaskItemProps) {
   const { toggleTask, deleteTask } = useTaskContext()
+  const { isAuthenticated } = useAuth()
+  const navigate = useNavigate()
   const [deleteConfirmation, setDeleteConfirmation] = useState(false)
+
+  const requireAuth = () => {
+    if (isAuthenticated) return true
+    navigate('/login', { state: { from: `/tasks/${task.id}` } })
+    return false
+  }
 
   return (
     <article
@@ -31,14 +42,16 @@ function TaskItem({ task, onEdit, onDetails }: TaskItemProps) {
         }
         aria-pressed={task.completed}
         disabled={task.pendingDelete}
-        onClick={() => toggleTask(task.id)}
+        onClick={() => requireAuth() && void toggleTask(task.id)}
       >
         {task.completed ? '+' : ''}
       </button>
 
       <div className="task-item__body">
         <h3 className="task-item__title">
-          {task.title}
+          <Link className="task-item__details-link" to={`/tasks/${task.id}`}>
+            {task.title}
+          </Link>
           {task.pendingDelete && (
             <span className="task-item__pending-label">Буде видалено</span>
           )}
@@ -73,7 +86,7 @@ function TaskItem({ task, onEdit, onDetails }: TaskItemProps) {
           <button
             className="task-item__edit"
             type="button"
-            onClick={() => onEdit(task.id)}
+            onClick={() => requireAuth() && onEdit(task.id)}
           >
             Редагувати
           </button>
@@ -89,7 +102,7 @@ function TaskItem({ task, onEdit, onDetails }: TaskItemProps) {
           className="task-item__delete"
           type="button"
           aria-label={`Видалити «${task.title}»`}
-          onClick={() => setDeleteConfirmation(true)}
+          onClick={() => requireAuth() && setDeleteConfirmation(true)}
         >
           ×
         </button>

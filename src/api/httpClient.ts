@@ -6,6 +6,21 @@ const baseURL = (
 
 export const apiClient = axios.create({ baseURL })
 
+let accessToken: string | null = null
+
+export function setAccessToken(token: string | null) {
+  accessToken = token
+}
+
+apiClient.interceptors.request.use((config) => {
+  if (accessToken) {
+    config.headers.set('Authorization', `Bearer ${accessToken}`)
+  } else {
+    config.headers.delete('Authorization')
+  }
+  return config
+})
+
 export class ApiError extends Error {
   readonly status?: number
   readonly code?: string

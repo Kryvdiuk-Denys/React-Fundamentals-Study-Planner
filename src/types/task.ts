@@ -28,7 +28,10 @@ export interface Task {
   priority: TaskPriority
   category: string
   categoryColor: CategoryColor
+  // Client-owned metadata because DummyJSON todos do not provide these fields.
+  createdBy: string
+  createdAt: string
   pendingDelete?: boolean
 }
 
-export type NewTask = Omit<Task, 'id' | 'completed' | 'pendingDelete'>
+export type NewTask = Omit<Task, 'id' | 'completed' | 'pendingDelete' | 'createdBy' | 'createdAt'>

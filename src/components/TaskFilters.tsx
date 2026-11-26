@@ -1,4 +1,4 @@
-import type { TaskFilter } from '../types/task'
+import type { TaskFilter, TaskPriority } from '../types/task'
 import './TaskFilters.scss'
 
 interface TaskFiltersProps {
@@ -7,10 +7,13 @@ interface TaskFiltersProps {
   completedCount: number
   searchTerm: string
   sortByPriority: boolean
+  activePriority: TaskPriority | 'all'
   onFilterChange: (filter: TaskFilter) => void
   onSearchChange: (searchTerm: string) => void
   onSortChange: (sortByPriority: boolean) => void
+  onPriorityChange: (priority: TaskPriority | 'all') => void
   onClearCompleted: () => void
+  onCreateTask: () => void
 }
 
 const filters: { value: TaskFilter; label: string }[] = [
@@ -25,18 +28,30 @@ function TaskFilters({
   completedCount,
   searchTerm,
   sortByPriority,
+  activePriority,
   onFilterChange,
   onSearchChange,
   onSortChange,
+  onPriorityChange,
   onClearCompleted,
+  onCreateTask,
 }: TaskFiltersProps) {
   return (
     <section className="task-filters" aria-label="Фільтри завдань">
       <div className="task-filters__top">
         <h2 className="task-filters__heading">Мої завдання</h2>
-        <span className="task-filters__total">
-          {counts.all} {counts.all === 1 ? 'завдання' : 'завдань'}
-        </span>
+        <div className="task-filters__top-actions">
+          <span className="task-filters__total">
+            {counts.all} {counts.all === 1 ? 'завдання' : 'завдань'}
+          </span>
+          <button
+            className="task-filters__create"
+            type="button"
+            onClick={onCreateTask}
+          >
+            + Створити завдання
+          </button>
+        </div>
       </div>
 
       <label className="task-filters__search-label">
@@ -48,6 +63,22 @@ function TaskFilters({
           onChange={(event) => onSearchChange(event.target.value)}
           placeholder="Назва, опис або категорія..."
         />
+      </label>
+
+      <label className="task-filters__priority-label">
+        <span className="task-form__label">Пріоритет</span>
+        <select
+          className="task-filters__sort"
+          value={activePriority}
+          onChange={(event) =>
+            onPriorityChange(event.target.value as TaskPriority | 'all')
+          }
+        >
+          <option value="all">Усі пріоритети</option>
+          <option value="high">Високий</option>
+          <option value="medium">Середній</option>
+          <option value="low">Низький</option>
+        </select>
       </label>
 
       <div className="task-filters__tabs" role="group" aria-label="Показати">
