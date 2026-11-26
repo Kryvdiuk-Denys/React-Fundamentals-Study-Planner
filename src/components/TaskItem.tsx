@@ -3,6 +3,7 @@ import { CATEGORY_COLOR_VALUES, type Task } from '../types/task'
 import useTaskContext from '../hooks/useTaskContext'
 import './TaskItem.scss'
 import { useNavigate } from 'react-router'
+import { Link } from 'react-router'
 import { useAuth } from '../context/AuthContext'
 
 interface TaskItemProps {
@@ -48,7 +49,9 @@ function TaskItem({ task, onEdit, onDetails }: TaskItemProps) {
 
       <div className="task-item__body">
         <h3 className="task-item__title">
-          {task.title}
+          <Link className="task-item__details-link" to={`/tasks/${task.id}`}>
+            {task.title}
+          </Link>
           {task.pendingDelete && (
             <span className="task-item__pending-label">Буде видалено</span>
           )}

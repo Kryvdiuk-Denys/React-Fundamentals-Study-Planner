@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { taskRepository } from '../repositories/taskRepository'
-import type { NewTask, Task, TaskFilter } from '../types/task'
+import type { NewTask, Task } from '../types/task'
 import TaskContext, { type ToastState, type ToastVariant } from './TaskContext'
 import { useAuth } from './AuthContext'
 
@@ -14,7 +14,6 @@ export function TaskProvider({ children }: { children: ReactNode }) {
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
   const [reloadKey, setReloadKey] = useState(0)
-  const [filter, setFilter] = useState<TaskFilter>('all')
   const [toast, setToast] = useState<ToastState | null>(null)
 
   const reloadTasks = useCallback(() => {
@@ -163,8 +162,6 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     total,
     reloadTasks,
     changePage,
-    filter,
-    setFilter,
     addTask,
     updateTask,
     toggleTask,
@@ -172,7 +169,7 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     clearCompleted,
     toast,
     dismissToast,
-  }), [addTask, changePage, clearCompleted, deleteTask, dismissToast, error, filter, loading, page, reloadTasks, setFilter, tasks, toggleTask, toast, total, updateTask])
+  }), [addTask, changePage, clearCompleted, deleteTask, dismissToast, error, loading, page, reloadTasks, tasks, toggleTask, toast, total, updateTask])
 
   return <TaskContext.Provider value={value}>{children}</TaskContext.Provider>
 }

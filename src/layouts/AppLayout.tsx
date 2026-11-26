@@ -12,12 +12,9 @@ export default function AppLayout() {
   return (
     <div className={`app-shell${isDarkTheme ? ' app-shell--dark' : ''}`}>
       <div className="app">
-        <Header
-          isDarkTheme={isDarkTheme}
-          onThemeToggle={() => setIsDarkTheme((currentTheme) => !currentTheme)}
-        />
+        <Header isDarkTheme={isDarkTheme} onThemeToggle={() => setIsDarkTheme((currentTheme) => !currentTheme)}/>
         <main>
-          <Outlet />
+          <Outlet/>
         </main>
         <Toast toast={toast} onDismiss={dismissToast} />
       </div>

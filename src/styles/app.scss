@@ -160,6 +160,20 @@ text-align: center;
   flex-wrap: wrap;
 }
 
+.tasks-page__toolbar {
+  justify-content: space-between;
+  margin-bottom: 18px;
+  padding: 18px 22px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+}
+
+.tasks-page__title {
+  margin: 0;
+  font-size: 1.8rem;
+}
+
 .tasks-page__toolbar h1,
 .task-details h1,
 .login-page h1,
@@ -184,6 +198,7 @@ text-align: center;
 .login-page button,
 .profile-page button,
 .tasks-page__toolbar button,
+.tasks-page__create,
 .task-details button {
   min-height: 40px;
   padding: 8px 12px;
